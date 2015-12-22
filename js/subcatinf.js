@@ -47,7 +47,7 @@ var subCatInfo = [{
 		"StockEx":"No",
 		"Priority":"No"
 		}},
-  {"name": "Mangamahaki",
+  {"Name": "Mangamahaki",
 	"properties":{
 		"ID":"T10",
 		"StockEx,":"No",
