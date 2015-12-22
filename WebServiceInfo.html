@@ -99,8 +99,16 @@
 	// method that updates the control based on feature properties passed.
 	info.update = function (props, extrastr) {
 		//extrastr = extrastr || "";
-		if (typeof extrastr === 'undefined') extrastr = '';
+		//console.log(props);
+		if (typeof extrastr === 'undefined') extrastr = ''; //checks if a second variable has been passed
+		if (typeof props !== 'object'){ //Checks if props is an object, if not then triggers a not in Tukituki message.
+			info.setContent(locationInfo(extrastr) + ' does not appear to be in the Tukituki Catchment');
+			info.show();
+			} 
+			else
+			{
 		var extra = {};
+		//checks sub cat info for additional information.
 		for (var i in subCatInfo) {
 			//console.log(subCatInfo[i].Name +" "+ props.Name);
 			if (subCatInfo[i].Name == props.Name) {
@@ -108,7 +116,7 @@
 				//console.log(extra)
 				}
 			}; 
-		console.log(extra);
+		//console.log(extra);
 		info.setContent('<h4>Tukituki Information</h4>' +  
 			locationInfo(extrastr) + ' is in the <br />'+
 			props.Name + ' Sub-Catchment <br />'+
@@ -119,6 +127,7 @@
 			'</table>'
 			); 
 			info.show();
+		};
 		};
 
 	function locationInfo(infostr) {
@@ -161,12 +170,13 @@
 			//console.log(data.results);
 			map.setZoom(15);//isn't working at moment
 			results.addLayer(L.marker(data.results[0].latlng));//adds marker at first location found
-			console.log(data.results[0].latlng);//the search text to add to the info panel if an address search is done.
+			//console.log(data.results[0].latlng);//the search text to add to the info panel if an address search is done.
 			//query the subcatchment layer at the loction of the result and pass the info to the info.update function.
 			ttsubcat.query().intersects(data.results[0].latlng).run(function(error, featureCollection){
 				if (featureCollection.features.length > 0){
 					info.update(featureCollection.features[0].properties, data.results[0].text)
-			}});
+					} else {info.update(' ', data.results[0].text)};
+				});
 		
 		});
 			
@@ -180,11 +190,13 @@
 			title: "Show me where I am"
 			},
 		locateOptions: {
+			maxZoom :15
 			}
 		}).addTo(map);
 	
 	//Stop following if the user drags the map
-	map.on('startfollowing', function() {
+	//map.on('locationfound', function(e) {console.log(e)});
+	map.on('startfollowing', function(e) {
 		map.on('dragstart', lc._stopFollowing, lc);
 	}).on('stopfollowing', function() {
 		map.off('dragstart', lc._stopFollowing, lc);
