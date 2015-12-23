@@ -50,7 +50,7 @@
 		var ttsubcat = L.esri.featureLayer({
 			url: 'https://hbrcwebmap.hbrc.govt.nz/arcgis/rest/services/Tukituki_PC6_Maps/FeatureServer/3/',
 			style : style, //function setting the styling for the layer
-			onEachFeature: onEachFeature //the function to call when a feature is interacted with
+			//onEachFeature: onEachFeature //the function to call when a feature is interacted with
 			}).addTo(map);
 			
 	//Feature Layer Style Function
@@ -65,13 +65,13 @@
     };
 }
 
-			
+	map.on('click', function (e) {pointQuery(e.latlng, 'The point you clicked');});		
 	//Feature layer listner function
 	function onEachFeature(feature, layer) {
 		layer.on({
 			//mouseover: highlightFeature,
 			//mouseout: resetHighlight,
-			click: infoFeature
+			//click: infoFeature
 			});
 		}
 		
@@ -122,7 +122,7 @@
 			props.Name + ' Sub-Catchment <br />'+
 			'<table>' +
 			'<tr><td><b>Sub-Catchment Information: </td><td>' + 
-			'<tr><td><b>Prority Area: </td><td>' + extra.Priority + '</td></b></tr>'+
+			'<tr><td><b>Phosphorous Prority Area: </td><td>' + extra.Priority + '</td></b></tr>'+
 			'<tr><td><b>Full Stock Exclusion Required: </td><td>' + extra.StockEx + '</td></b></tr>'+
 			'</table>'
 			); 
@@ -166,20 +166,33 @@
 		// listen for the results event, add the first result to the map, and interrogate the subcatchments layer for the location and show the subcatchment info in the info panel
 		locationSearch.on("results", function(data) {
 			lc.stop();//stops location services, info wasn't displaying if location and search results active at same time, may need reassessed
-			results.clearLayers();
+			//results.clearLayers();
 			//console.log(data.results);
 			map.setZoom(15);//isn't working at moment
-			results.addLayer(L.marker(data.results[0].latlng));//adds marker at first location found
+			//results.addLayer(L.marker(data.results[0].latlng));//adds marker at first location found
 			//console.log(data.results[0].latlng);//the search text to add to the info panel if an address search is done.
 			//query the subcatchment layer at the loction of the result and pass the info to the info.update function.
-			ttsubcat.query().intersects(data.results[0].latlng).run(function(error, featureCollection){
-				if (featureCollection.features.length > 0){
-					info.update(featureCollection.features[0].properties, data.results[0].text)
-					} else {info.update(' ', data.results[0].text)};
-				});
+			//ttsubcat.query().intersects(data.results[0].latlng).run(function(error, featureCollection){
+			//	if (featureCollection.features.length > 0){
+			//		info.update(featureCollection.features[0].properties, data.results[0].text)
+			//		} else {info.update(' ', data.results[0].text)};
+			//	});
+			pointQuery(data.results[0].latlng, data.results[0].text);
 		
 		});
 			
+	//Function that takes a latlng point, adds a marker, queries the subcatchment feature layer, and updates the info panel
+	function pointQuery(pointObject, infoText) {
+		if (typeof infoText === 'undefined') infoText = ''; //checks if a second variable has been passed
+		results.clearLayers();
+		results.addLayer(L.marker(pointObject));//adds marker at first location found
+		ttsubcat.query().intersects(pointObject).run(function(error, featureCollection){
+				if (featureCollection.features.length > 0){
+					info.update(featureCollection.features[0].properties, infoText)
+					} else {info.update(' ', infoText)};
+				});
+		}
+	
 		
 	//Location control and handler
 	lc = L.control.locate({
@@ -195,8 +208,13 @@
 		}).addTo(map);
 	
 	//Stop following if the user drags the map
-	//map.on('locationfound', function(e) {console.log(e)});
-	map.on('startfollowing', function(e) {
+	map.on('locationfound', function(e) {
+		map.setZoom(15);
+		pointQuery(e.latlng,'Your location')
+		});
+	map.on('startfollowing', function() {
+		//console.log(lc);
+		//pointQuery(e.latlng,'Your location');
 		map.on('dragstart', lc._stopFollowing, lc);
 	}).on('stopfollowing', function() {
 		map.off('dragstart', lc._stopFollowing, lc);
